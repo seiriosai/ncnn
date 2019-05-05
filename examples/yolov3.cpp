@@ -42,19 +42,19 @@ static int detect_yolov3(const cv::Mat& bgr, std::vector<Object>& objects)
     // original pretrained model from https://github.com/eric612/MobileNet-YOLO
     // https://github.com/eric612/MobileNet-YOLO/blob/master/models/yolov3/mobilenet_yolov3_lite_deploy.prototxt
     // https://github.com/eric612/MobileNet-YOLO/blob/master/models/yolov3/mobilenet_yolov3_lite_deploy.caffemodel
-    yolov3.load_param("mobilenet_yolov3.param");
-    yolov3.load_model("mobilenet_yolov3.bin");
+    yolov3.load_param("yolov3-tiny.param");
+    yolov3.load_model("yolov3-tiny.bin");
 
-    const int target_size = 320;
+    const int target_size = 416;
 
     int img_w = bgr.cols;
     int img_h = bgr.rows;
 
-    ncnn::Mat in = ncnn::Mat::from_pixels_resize(bgr.data, ncnn::Mat::PIXEL_BGR, bgr.cols, bgr.rows, target_size, target_size);
+    ncnn::Mat in = ncnn::Mat::from_pixels_resize(bgr.data, ncnn::Mat::PIXEL_RGB2BGR, bgr.cols, bgr.rows, target_size, target_size);
 
-    const float mean_vals[3] = {127.5f, 127.5f, 127.5f};
-    const float norm_vals[3] = {0.007843f, 0.007843f, 0.007843f};
-    in.substract_mean_normalize(mean_vals, norm_vals);
+//    const float mean_vals[3] = {127.5f, 127.5f, 127.5f};
+    const float norm_vals[3] = {1/255.0, 1 / 255.0, 1 / 255.0 };
+    in.substract_mean_normalize(0, norm_vals);
 
     ncnn::Extractor ex = yolov3.create_extractor();
     ex.set_num_threads(4);
@@ -62,7 +62,7 @@ static int detect_yolov3(const cv::Mat& bgr, std::vector<Object>& objects)
     ex.input("data", in);
 
     ncnn::Mat out;
-    ex.extract("detection_out", out);
+    ex.extract("yolo_23", out);
 
 //     printf("%d %d %d\n", out.w, out.h, out.c);
     objects.clear();
@@ -86,12 +86,10 @@ static int detect_yolov3(const cv::Mat& bgr, std::vector<Object>& objects)
 
 static void draw_objects(const cv::Mat& bgr, const std::vector<Object>& objects)
 {
-    static const char* class_names[] = {"background",
-        "aeroplane", "bicycle", "bird", "boat",
-        "bottle", "bus", "car", "cat", "chair",
-        "cow", "diningtable", "dog", "horse",
-        "motorbike", "person", "pottedplant",
-        "sheep", "sofa", "train", "tvmonitor"};
+    static const char* class_names[] = {"background","one",
+        "two", "three", "four", "five",
+        "first", "good"
+	};
 
     cv::Mat image = bgr.clone();
 
