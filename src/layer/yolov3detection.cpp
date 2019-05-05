@@ -161,14 +161,14 @@ int Yolov3Detection::forward(const std::vector<Mat> &bottom_blobs, std::vector<M
                 float prob = box_score * class_score;
                 if (prob >= confidence_threshold)
                 {
-                    ObjectBox object = {
-                        .xmin = xmin,
-                        .ymin = ymin,
-                        .xmax = xmax,
-                        .ymax = ymax,
-                        .prob = prob,
-                        .classid = class_index,
-                    };
+					ObjectBox object;
+
+					object.xmin = xmin,
+						object.ymin = ymin,
+						object.xmax = xmax,
+						object.ymax = ymax,
+						object.prob = prob,
+						object.classid = class_index,
                     objects.add_new_object_box(object);
                 }
 

@@ -230,7 +230,7 @@ static int get_cpucount()
     return count;
 #else
 #ifdef _OPENMP
-    return omp_get_max_threads();
+	return omp_get_max_threads();
 #else
     return 1;
 #endif // _OPENMP
@@ -241,7 +241,9 @@ static int g_cpucount = get_cpucount();
 
 int get_cpu_count()
 {
-    return g_cpucount;
+	if (g_cpucount == 0)
+		g_cpucount = get_cpucount();
+	return g_cpucount;
 }
 
 #ifdef __ANDROID__
