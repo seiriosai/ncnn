@@ -7,6 +7,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/layer)
 
+set(CMAKE_DEBUG_POSTFIX d)
+
 if(NCNN_VULKAN)
     find_program(GLSLANGVALIDATOR_EXECUTABLE NAMES glslangValidator PATHS $ENV{VULKAN_SDK}/bin NO_CMAKE_FIND_ROOT_PATH)
     message(STATUS "Found glslangValidator: ${GLSLANGVALIDATOR_EXECUTABLE}")
@@ -247,7 +249,12 @@ if(NCNN_OPENMP AND OpenMP_CXX_FOUND)
 endif()
 
 if(NCNN_INSTALL_SDK)
-  install(TARGETS ncnn ARCHIVE DESTINATION lib)
+  include(CMakePackageConfigHelpers)
+  include(GNUInstallDirs)
+  set(cmake_package_name ncnn)
+  set(targets_export_name ${cmake_package_name}Targets CACHE INTERNAL "")
+
+  install(TARGETS ncnn EXPORT ${targets_export_name} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
   install(FILES
     allocator.h
     blob.h
@@ -265,6 +272,18 @@ if(NCNN_INSTALL_SDK)
     benchmark.h
     ${CMAKE_CURRENT_BINARY_DIR}/layer_type_enum.h
     ${CMAKE_CURRENT_BINARY_DIR}/platform.h
-    DESTINATION include
+    DESTINATION include/ncnn
   )
+
+  set(generated_dir "${CMAKE_CURRENT_BINARY_DIR}/generated" CACHE INTERNAL "")
+  set(cmake_files_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${cmake_package_name}")
+  set(version_file "${generated_dir}/${cmake_package_name}ConfigVersion.cmake")
+  write_basic_package_version_file(${version_file} VERSION 1.0.12 COMPATIBILITY AnyNewerVersion)
+  install(EXPORT ${targets_export_name} DESTINATION ${cmake_files_install_dir})
+
+  set(config_file "${generated_dir}/${cmake_package_name}Config.cmake")
+  configure_package_config_file("Config.cmake.in"
+    "${config_file}" INSTALL_DESTINATION ${cmake_files_install_dir})
+  install(FILES ${version_file} ${config_file}
+    DESTINATION ${cmake_files_install_dir})
 endif()
